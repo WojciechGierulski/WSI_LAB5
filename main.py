@@ -1,7 +1,39 @@
 import math
 import random
+from csv import reader
+import sys, os
+
+class Data:
+    def __init__(self, filename, has_header, delimiter_type):
+        self.filename = filename
+        self.path  = os.path.join(sys.path[0], self.filename)
+        self.delimiter_type = delimiter_type
+        self.has_header = has_header
+        self.dataset = None
+
+    def read_data(self):
+        lines = reader(open(self.path, "r"), delimiter = self.delimiter_type)
+        self.dataset = list(lines)
+        if self.has_header:
+            self.dataset.pop(0)
+        for record in self.dataset:
+            for i in range(len(record)):
+                record[i] = float(record[i].strip())
 
 
+    def normalize_dataset(self):
+        minmax = []
+        for column in zip(*self.dataset):
+            minmax.append([min(column), max(column)])
+        for row in self.dataset:
+            for i in range(len(row)-1):
+                row[i] = (row[i] - minmax[i][0]) / (minmax[i][1] - minmax[i][0])
+
+    def prepare_data(self):
+        self.read_data()
+        self.normalize_dataset()
+
+    
 class Neuron:
     def __init__(self, weights_number):
         # Init wights with rand numbers between 0 and 1, last weight is bias
@@ -86,6 +118,13 @@ class NeuralNetwork:
     def predict(self, data):
         outputs = self.forward_propagation(data)
         return outputs.index(max(outputs))
+
+"""
+train_set = Data(filename = 'winequality-red.csv', has_header = True, delimiter_type= ";")
+train_set.prepare_data()
+print(train_set.dataset)
+"""
+
 
 
 """
