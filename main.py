@@ -17,8 +17,9 @@ class Data:
         if self.has_header:
             self.dataset.pop(0)
         for record in self.dataset:
-            for i in range(len(record)):
+            for i in range(len(record)-1):
                 record[i] = float(record[i].strip())
+            record[-1] = int(record[-1].strip())
 
 
     def normalize_dataset(self):
