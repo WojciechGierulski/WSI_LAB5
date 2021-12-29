@@ -21,6 +21,16 @@ class Data:
                 record[i] = float(record[i].strip())
             record[-1] = int(record[-1].strip())
 
+    def convert_class_values(self):
+        all_classes = [record[-1] for record in self.dataset]
+        unique_classes = set(all_classes)
+        conversion_table = dict()
+        for i, class_val in enumerate(unique_classes):
+          conversion_table[class_val] = i
+        for row in self.dataset:
+          row[-1] = conversion_table[row[-1]]
+        return conversion_table
+
 
     def normalize_dataset(self):
         minmax = []
@@ -33,6 +43,7 @@ class Data:
     def prepare_data(self):
         self.read_data()
         self.normalize_dataset()
+        self.convert_class_values()
 
     
 class Neuron:
