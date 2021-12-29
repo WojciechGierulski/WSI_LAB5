@@ -2,6 +2,8 @@ import math
 import random
 from csv import reader
 import sys, os
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Data:
     def __init__(self, filename, has_header, delimiter_type):
@@ -11,6 +13,7 @@ class Data:
         self.has_header = has_header
         self.dataset = None
 
+    # Reads CSV file, converts attributes to floats and class value to integer
     def read_data(self):
         lines = reader(open(self.path, "r"), delimiter = self.delimiter_type)
         self.dataset = list(lines)
@@ -21,6 +24,9 @@ class Data:
                 record[i] = float(record[i].strip())
             record[-1] = int(record[-1].strip())
 
+    # Remaps class values - assigns successive integers
+    # Example of function return: {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 5}
+    # When expected output is [ 0 0 0 0 1 0] it means class = 7
     def convert_class_values(self):
         all_classes = [record[-1] for record in self.dataset]
         unique_classes = set(all_classes)
@@ -31,7 +37,7 @@ class Data:
           row[-1] = conversion_table[row[-1]]
         return conversion_table
 
-
+    # Performs data normalization -> y = (x - min) / (max - min)
     def normalize_dataset(self):
         minmax = []
         for column in zip(*self.dataset):
@@ -40,6 +46,7 @@ class Data:
             for i in range(len(row)-1):
                 row[i] = (row[i] - minmax[i][0]) / (minmax[i][1] - minmax[i][0])
 
+    # Prepares data for training
     def prepare_data(self):
         self.read_data()
         self.normalize_dataset()
@@ -115,7 +122,9 @@ class NeuralNetwork:
                     neuron.weights[j] -= learn_rate * neuron.error * inputs[j]
                 neuron.weights[-1] -= learn_rate * neuron.error
 
-    def train(self, epochs, learn_rate, train_data):
+    # I added plot option for report purposes
+    def train(self, epochs, learn_rate, train_data, plot):
+        errors_list = []
         for epoch in range(epochs):
             error_sum = 0.0
             for data in train_data:
@@ -125,26 +134,93 @@ class NeuralNetwork:
                 error_sum += sum([(expected_outputs[i] - outputs[i]) ** 2 for i in range(len(expected_outputs))])
                 self.backward_propagation(expected_outputs)
                 self.update_weights(data, learn_rate)
+            errors_list.append(error_sum)
             print(f"epoch: {epoch}, E: {error_sum}")
+        plt.plot(errors_list) 
+        plt.grid()
+        plt.xlabel("epochs")
+        plt.ylabel("error sum")
+        plt.title("Training with learning rate = {rate} for {epochs} epochs".format(rate=str(learn_rate).replace(".",","), epochs=epochs))
+        if plot:
+          plt.show()
 
     def predict(self, data):
         outputs = self.forward_propagation(data)
         return outputs.index(max(outputs))
 
 
-train_set = Data(filename = 'winequality-red.csv', has_header = True, delimiter_type= ";")
-train_set.prepare_data()
-#print(train_set.dataset)
+class Test:
+    def __init__(self, csv_data, network):
+      self.csv_data = csv_data
+      self.network = network
+
+    # Divides data into k sets for k-cross validation
+    # Return: list of lists()
+    def k_cross_validation_split(self, sets_number):
+      if sets_number == 1:
+        raise Exception("Minimum number of sets for k-cross validation is 2!")
+      local_copy = list(self.csv_data.dataset)
+      random.shuffle(local_copy)
+      result = np.array_split(local_copy, sets_number)
+      splitted = [element.tolist() for element in [*result]]
+      for sublist in splitted:
+        for i in range(len(sublist)):
+          sublist[i][-1] = int(sublist[i][-1]) #class value must be int (numpy forces floats)
+      return splitted
+
+    # Division into a training and testing set according to a given proportion
+    def train_and_test_set_split(self, division_ratio=0.60):
+      local_copy = list(self.csv_data.dataset)
+      random.shuffle(local_copy)
+      train_size = math.floor(division_ratio * len(self.csv_data.dataset))
+      return [local_copy[:train_size], local_copy[train_size:]]
+
+    # Calculates accuracy as a percentage (compares 2 lists)
+    def calculate_performance(self, actual, predicted):
+      correct = 0
+      for i in range(len(actual)):
+        if actual[i] == predicted[i]:
+          correct += 1
+      return correct / float(len(actual)) * 100.0
+
+
+    # Executing simple testing procedure
+    def test_network(self, resampling_type, epochs, learning_rate, k_sets = 5, division_ratio = 0.6):
+      if resampling_type == "k_cross":
+        data = self.k_cross_validation_split(k_sets)
+      elif resampling_type == "test&train":
+        data = self.train_and_test_set_split(division_ratio)
+      accuracy_list = []
+      for set in data:
+        train_set = list(data)
+        train_set.remove(set)
+        train_set = sum(train_set, [])
+        test_set = list()
+        for line in set:
+          test_set.append(list(line))
+          list(line)[-1] = None
+        self.network.train(epochs, learning_rate, train_set, plot = False)
+        predicted, actual = [], []
+        actual = [line[-1] for line in set]
+        for row in test_set:
+          predicted.append(self.network.predict(row))
+        accuracy_list.append(self.calculate_performance(actual, predicted))
+      return accuracy_list
+
+
+random.seed(1)
+csv_dataset = Data(filename = 'winequality-red.csv', has_header = True, delimiter_type= ";")
+csv_dataset.prepare_data()
+
 
 # 11 atrybutów wejściowych dla zbioru z winem (11 + 1(bias) neuronów w warstwie wejściowej)
-# wg źródeł liczba neuronów warstwy ukrytej to 2/3 * inputs + outputs, czyli 19
+# wg źródeł liczba neuronów warstwy ukrytej to 2/3 * inputs + outputs xD, czyli 19 w naszym przypadku
 # 11 neuronów w warstwie wyjściowej (klasy od 0 do 10)
 network = NeuralNetwork(11,19,11) 
-network.train(150,.1,train_set.dataset[0:600])
-match = 0
-iter = 50
-for i in range(iter):
-  if(network.predict(train_set.dataset[i]) == train_set.dataset[i][-1]):
-    match = match + 1
-print("Performance: ", match/iter * 100, "%")
+
+
+tester = Test(csv_dataset, network)
+print(tester.test_network("k_cross", epochs = 200, learning_rate = 0.1, k_sets = 5))
+
+
 
