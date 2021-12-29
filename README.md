@@ -7,5 +7,10 @@ Zrobiłem jakąś sieć. Nie testowałem pedantycznie, ale na pierwszy rzut oka 
 + Jedno pytanie: `for epoch in range(epochs-5):` czy to _epochs-5_ ma jakiś głębszy sens, czy to po prostu pozostałość po eksperymentach? 
 + Plan rozumiem jest taki, że wzorujemy się na https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/ i robimy obiektowo, tak? :laughing: 
 
-# :vertical_traffic_light:   
-Ustawiam semafor, że aktualnie coś tam działam z projektem 
+# Update:  
+Skończyłem implementację :+1: Wygląda jakoby działało tzn. wyniki są sensowne.  
+
+Do zrobienia zostało :arrow_right: 
++ przejrzenie kodu i **sprawdzenie, czy to naprawdę działa xD**
++ _"porządne"_ testowanie i ocena jakości uzyskanych rezultatów
++ napisanie raportu 
