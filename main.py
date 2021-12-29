@@ -116,7 +116,7 @@ class NeuralNetwork:
                 neuron.weights[-1] -= learn_rate * neuron.error
 
     def train(self, epochs, learn_rate, train_data):
-        for epoch in range(epochs-5):
+        for epoch in range(epochs):
             error_sum = 0.0
             for data in train_data:
                 outputs = self.forward_propagation(data)
@@ -131,21 +131,20 @@ class NeuralNetwork:
         outputs = self.forward_propagation(data)
         return outputs.index(max(outputs))
 
-"""
+
 train_set = Data(filename = 'winequality-red.csv', has_header = True, delimiter_type= ";")
 train_set.prepare_data()
-print(train_set.dataset)
-"""
+#print(train_set.dataset)
 
+# 11 atrybutów wejściowych dla zbioru z winem (11 + 1(bias) neuronów w warstwie wejściowej)
+# wg źródeł liczba neuronów warstwy ukrytej to 2/3 * inputs + outputs, czyli 19
+# 11 neuronów w warstwie wyjściowej (klasy od 0 do 10)
+network = NeuralNetwork(11,19,11) 
+network.train(150,.1,train_set.dataset[0:600])
+match = 0
+iter = 50
+for i in range(iter):
+  if(network.predict(train_set.dataset[i]) == train_set.dataset[i][-1]):
+    match = match + 1
+print("Performance: ", match/iter * 100, "%")
 
-
-"""
-data = [
-    [x1,x2,x3,y], - pierwsza próbka
-    [x1,x2,x3,y] - druga próbka itd.
-]
-
-network = NeuralNetwork(3,3,3)
-network.train(1,1,data)
-network.predict(datax)
-"""
