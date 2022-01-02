@@ -4,6 +4,8 @@ from csv import reader
 import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
+plt.style.use("ggplot")
+import copy
 
 class Data:
     def __init__(self, filename, has_header, delimiter_type):
@@ -87,6 +89,7 @@ class NeuralNetwork:
         self.input_number = input_number
         self.hidden_number = hidden_number
         self.output_number = output_number
+        self.learn_history = []
 
     def forward_propagation(self, inputs):
         for layer in self.layers:
@@ -135,14 +138,8 @@ class NeuralNetwork:
                 self.backward_propagation(expected_outputs)
                 self.update_weights(data, learn_rate)
             errors_list.append(error_sum)
-            print(f"epoch: {epoch}, E: {error_sum}")
-        plt.plot(errors_list) 
-        plt.grid()
-        plt.xlabel("epochs")
-        plt.ylabel("error sum")
-        plt.title("Training with learning rate = {rate} for {epochs} epochs".format(rate=str(learn_rate).replace(".",","), epochs=epochs))
-        if plot:
-          plt.show()
+            #print(f"epoch: {epoch}, E: {error_sum}")
+            self.learn_history.append(error_sum)
 
     def predict(self, data):
         outputs = self.forward_propagation(data)
@@ -185,13 +182,14 @@ class Test:
 
 
     # Executing simple testing procedure
-    def test_network(self, resampling_type, epochs, learning_rate, k_sets = 5, division_ratio = 0.6):
+    def test_network(self, resampling_type, epochs, learning_rate, k_sets = 5, division_ratio = 0.7):
+      self.networks = [copy.deepcopy(self.network) for _ in range(k_sets)]
       if resampling_type == "k_cross":
         data = self.k_cross_validation_split(k_sets)
       elif resampling_type == "test&train":
         data = self.train_and_test_set_split(division_ratio)
       accuracy_list = []
-      for set in data:
+      for i, set in enumerate(data):
         train_set = list(data)
         train_set.remove(set)
         train_set = sum(train_set, [])
@@ -199,11 +197,11 @@ class Test:
         for line in set:
           test_set.append(list(line))
           list(line)[-1] = None
-        self.network.train(epochs, learning_rate, train_set, plot = False)
+        self.networks[i].train(epochs, learning_rate, train_set, plot = False)
         predicted, actual = [], []
         actual = [line[-1] for line in set]
         for row in test_set:
-          predicted.append(self.network.predict(row))
+          predicted.append(self.networks[i].predict(row))
         accuracy_list.append(self.calculate_performance(actual, predicted))
       return accuracy_list
 
@@ -216,11 +214,25 @@ csv_dataset.prepare_data()
 # 11 atrybutów wejściowych dla zbioru z winem (11 + 1(bias) neuronów w warstwie wejściowej)
 # wg źródeł liczba neuronów warstwy ukrytej to 2/3 * inputs + outputs xD, czyli 19 w naszym przypadku
 # 11 neuronów w warstwie wyjściowej (klasy od 0 do 10)
-network = NeuralNetwork(11,19,11) 
 
 
-tester = Test(csv_dataset, network)
-print(tester.test_network("k_cross", epochs = 200, learning_rate = 0.1, k_sets = 5))
 
 
+legends = []
+for i, learn_rate in enumerate([0.01, 0.1, 0.2, 0.5, 1, 10]):
+
+    network = NeuralNetwork(11,19,11)
+    epochs = 50
+    tester = Test(csv_dataset, network)
+    acc_list = tester.test_network("k_cross", epochs = epochs, learning_rate = learn_rate, k_sets=3)
+    print(acc_list)
+    acc = sum(acc_list)/len(acc_list)
+    plt.plot(tester.networks[0].learn_history)
+    legends.append(f"learn_rate={learn_rate}, accuracy={round(acc, 2)}%")
+
+plt.xlabel("epoch")
+plt.ylabel("error")
+plt.title("Błąd uczonej sieci w kolejnych epokach dla różnych współczynników uczenia")
+plt.legend(legends, loc='upper right')
+plt.show()
 
