@@ -1,16 +1,7 @@
-# WSI_LAB5
-
-Zrobiłem jakąś sieć. Nie testowałem pedantycznie, ale na pierwszy rzut oka wydaje się, że działa. Na pewno trzeba jeszcze wczytać, znormalizować i przekonwertować dane do odpowiedniej postaci.
-
-+ Dodałem klasę obsługującą wczytanie danych z pliku _.csv_, normalizację oraz konwersję.  
-+ Testy zrobimy chyba na podziale na zbiory 60/40 oraz k-krotna walidacja krzyżowa, co nie ?  
-+ Jedno pytanie: `for epoch in range(epochs-5):` czy to _epochs-5_ ma jakiś głębszy sens, czy to po prostu pozostałość po eksperymentach? 
-+ Plan rozumiem jest taki, że wzorujemy się na https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/ i robimy obiektowo, tak? :laughing: 
-
-# Update:  
-Skończyłem implementację :+1: Wygląda jakoby działało tzn. wyniki są sensowne.  
-
-Do zrobienia zostało :arrow_right: 
-+ przejrzenie kodu i **sprawdzenie, czy to naprawdę działa xD**
-+ _"porządne"_ testowanie i ocena jakości uzyskanych rezultatów
-+ napisanie raportu 
+# WSI - ćwiczenie 5 :computer:    
+# Temat: Sztuczne sieci neuronowe :dna:
+### Zespół: 
++ **Wojciech Gierulski**
++ **Jan Kaniuka**
+### Grupa ćwiczeniowa: poniedziałki 18:15 - 20:00
+### Prowadzący: mgr inż. Mikołaj Markiewicz
