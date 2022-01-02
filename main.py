@@ -15,7 +15,7 @@ class Data:
         self.has_header = has_header
         self.dataset = None
 
-    # Reads CSV file, converts attributes to floats and class value to integer
+    # Reads CSV file, converts attributes to floats and class values to integers
     def read_data(self):
         lines = reader(open(self.path, "r"), delimiter = self.delimiter_type)
         self.dataset = list(lines)
@@ -40,6 +40,7 @@ class Data:
         return conversion_table
 
     # Performs data normalization -> y = (x - min) / (max - min)
+		# output is between 0 and 1
     def normalize_dataset(self):
         minmax = []
         for column in zip(*self.dataset):
@@ -69,6 +70,7 @@ class Neuron:
             result += input * self.weights[i]
         return self.activation_function(result)
 
+		# sigmoidal activation function
     def activation_function(self, sum_result):
         return 1.0 / (1.0 + math.exp(-sum_result))
 
@@ -125,7 +127,7 @@ class NeuralNetwork:
                     neuron.weights[j] -= learn_rate * neuron.error * inputs[j]
                 neuron.weights[-1] -= learn_rate * neuron.error
 
-    # I added plot option for report purposes
+
     def train(self, epochs, learn_rate, train_data, plot):
         errors_list = []
         for epoch in range(epochs):
@@ -138,7 +140,6 @@ class NeuralNetwork:
                 self.backward_propagation(expected_outputs)
                 self.update_weights(data, learn_rate)
             errors_list.append(error_sum)
-            #print(f"epoch: {epoch}, E: {error_sum}")
             self.learn_history.append(error_sum)
 
     def predict(self, data):
@@ -165,7 +166,7 @@ class Test:
           sublist[i][-1] = int(sublist[i][-1]) #class value must be int (numpy forces floats)
       return splitted
 
-    # Division into a training and testing set according to a given proportion
+    # Division into  training and testing set according to a given proportion
     def train_and_test_set_split(self, division_ratio=0.60):
       local_copy = list(self.csv_data.dataset)
       random.shuffle(local_copy)
@@ -210,13 +211,9 @@ random.seed(1)
 csv_dataset = Data(filename = 'winequality-red.csv', has_header = True, delimiter_type= ";")
 csv_dataset.prepare_data()
 
-
-# 11 atrybutów wejściowych dla zbioru z winem (11 + 1(bias) neuronów w warstwie wejściowej)
-# wg źródeł liczba neuronów warstwy ukrytej to 2/3 * inputs + outputs xD, czyli 19 w naszym przypadku
-# 11 neuronów w warstwie wyjściowej (klasy od 0 do 10)
-
-
-
+# 11 neurons in the input layer (wine is described by 11 attributes)
+# 19 neurons in the hidden layer as rule of thumb (2/3 * inputs + outputs)
+# 11 neurons in the output layer (classes from 0 to 10)
 
 legends = []
 for i, learn_rate in enumerate([0.01, 0.1, 0.2, 0.5, 1, 10]):
@@ -235,4 +232,3 @@ plt.ylabel("error")
 plt.title("Błąd uczonej sieci w kolejnych epokach dla różnych współczynników uczenia")
 plt.legend(legends, loc='upper right')
 plt.show()
-
